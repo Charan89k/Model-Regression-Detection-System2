@@ -143,3 +143,30 @@ class EvaluationResult(MRDSDomainModel):
         description="Detected regressions compared to the baseline."
     )
     success: bool = Field(..., description="True if the result passed all assertions and regression checks.")
+
+
+class RegressionThresholds(MRDSDomainModel):
+    """Configuration defining strict bounds for regression detection."""
+    max_accuracy_drop: float = Field(default=0.02, description="Maximum allowed accuracy drop (e.g., 0.02 = 2%)")
+    max_new_failures: int = Field(default=5, description="Maximum number of new failures allowed")
+
+
+class RegressionAlert(MRDSDomainModel):
+    """An alert generated when a threshold is breached or anomaly detected."""
+    alert_type: str = Field(..., description="E.g., 'accuracy_drop', 'high_new_failures', 'statistical_warning'")
+    message: str = Field(..., description="Human readable description of the alert")
+    severity: str = Field(default="warning", description="Severity level: 'warning', 'critical'")
+
+
+class RunComparison(MRDSDomainModel):
+    """The output object representing the comparison between two runs."""
+    baseline_run_id: str = Field(..., description="ID of the baseline run.")
+    candidate_run_id: str = Field(..., description="ID of the candidate run.")
+    baseline_accuracy: float = Field(..., description="Overall accuracy of the baseline run.")
+    candidate_accuracy: float = Field(..., description="Overall accuracy of the candidate run.")
+    accuracy_delta: float = Field(..., description="candidate_accuracy - baseline_accuracy")
+    new_failures: List[UUID] = Field(..., description="List of case IDs that passed in baseline but failed in candidate.")
+    recovered_failures: List[UUID] = Field(..., description="List of case IDs that failed in baseline but passed in candidate.")
+    category_deltas: Dict[str, float] = Field(..., description="Accuracy deltas grouped by category/difficulty.")
+    alerts: List[RegressionAlert] = Field(default_factory=list, description="List of triggered alerts.")
+
