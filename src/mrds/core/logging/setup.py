@@ -4,11 +4,17 @@ from typing import Any
 
 import structlog
 
+from mrds.core.config.settings import settings
 
-def setup_logging(level: str = "INFO", json_format: bool = False) -> None:
-    """Configures structured logging for the application."""
+
+def setup_logging() -> None:
+    """Configures structured logging for the application using structlog."""
     
-    logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level.upper())
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stdout,
+        level=settings.LOG_LEVEL.upper()
+    )
     
     shared_processors: list[structlog.types.Processor] = [
         structlog.contextvars.merge_contextvars,
@@ -21,7 +27,7 @@ def setup_logging(level: str = "INFO", json_format: bool = False) -> None:
 
     processors: list[structlog.types.Processor] = shared_processors.copy()
     
-    if json_format:
+    if settings.LOG_FORMAT.lower() == "json":
         processors.append(structlog.processors.JSONRenderer())
     else:
         processors.append(
