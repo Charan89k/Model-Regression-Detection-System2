@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRDS Evaluation Report - {{ candidate_run_id }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+    
+    <header class="bg-white border-b border-slate-200 p-6 shadow-sm">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-indigo-700 tracking-tight">MRDS Report</h1>
+                <p class="text-sm text-slate-500 mt-1">Run ID: <span class="font-mono text-xs">{{ candidate_run_id }}</span></p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-semibold text-slate-700">Timestamp: <span class="font-normal">{{ timestamp }}</span></p>
+                <p class="text-sm font-semibold text-slate-700">Prompt: <span class="font-mono text-xs bg-slate-100 px-1 rounded">{{ prompt_version }}</span></p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 mt-6 space-y-8">
+        
+        <!-- Summary Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Baseline Accuracy</h3>
+                <p class="text-4xl font-bold mt-2 text-slate-700">{{ "%.1f"|format(baseline_accuracy * 100) }}%</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Candidate Accuracy</h3>
+                <p class="text-4xl font-bold mt-2 text-slate-700">{{ "%.1f"|format(candidate_accuracy * 100) }}%</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Accuracy Delta</h3>
+                <p class="text-4xl font-bold mt-2 {% if accuracy_delta < 0 %}text-red-500{% elif accuracy_delta > 0 %}text-green-500{% else %}text-slate-500{% endif %}">
+                    {{ "%+.1f"|format(accuracy_delta * 100) }}%
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">New Failures</h3>
+                <p class="text-4xl font-bold mt-2 {% if new_failures_count > 0 %}text-red-500{% else %}text-green-500{% endif %}">
+                    {{ new_failures_count }}
+                </p>
+            </div>
+        </section>
+
+        <!-- Alerts -->
+        {% if alerts %}
+        <section class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm">
+            <h2 class="text-lg font-bold text-red-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                Regression Alerts
+            </h2>
+            <ul class="list-disc pl-5 space-y-2 text-red-700">
+                {% for alert in alerts %}
+                    <li><strong>[{{ alert.severity|upper }}]</strong> {{ alert.message }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <!-- Historical Trends Chart -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold text-slate-800 mb-6">Historical Accuracy Trends</h2>
+            <div class="w-full h-64">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Category Deltas -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-200">
+                <h2 class="text-xl font-bold text-slate-800">Category Deltas</h2>
+            </div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-600 text-sm uppercase tracking-wider border-b border-slate-200">
+                        <th class="p-4 font-medium">Category</th>
+                        <th class="p-4 font-medium">Accuracy Delta</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for category, delta in category_deltas.items() %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-4 font-medium text-slate-800">{{ category }}</td>
+                        <td class="p-4 font-bold {% if delta < 0 %}text-red-500{% elif delta > 0 %}text-green-500{% else %}text-slate-500{% endif %}">
+                            {{ "%+.1f"|format(delta * 100) }}%
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+
+    <script>
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+        const chartData = {{ chart_data | safe }};
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Accuracy (%)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Run Timestamp' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
