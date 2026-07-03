@@ -23,6 +23,7 @@ class BaseAppConfig(BaseSettings):
     # LLM Providers (Secrets)
     OPENAI_API_KEY: SecretStr | None = Field(default=None)
     ANTHROPIC_API_KEY: SecretStr | None = Field(default=None)
+    GEMINI_API_KEY: SecretStr | None = Field(default=None)
 
     # Database
     DATABASE_URL: PostgresDsn
@@ -58,6 +59,7 @@ class TestingConfig(BaseAppConfig):
     )
     OPENAI_API_KEY: SecretStr = Field(default=SecretStr("test_openai_key"))
     ANTHROPIC_API_KEY: SecretStr = Field(default=SecretStr("test_anthropic_key"))
+    GEMINI_API_KEY: SecretStr = Field(default=SecretStr("test_gemini_key"))
 
 
 class ProductionConfig(BaseAppConfig):
