@@ -224,93 +224,236 @@ Model-Regression-Detection-System/
 
 # 🚀 Quick Start
 
-Clone the repository
+This guide walks you through setting up the **Model Regression Detection System (MRDS)** from scratch.
+
+---
+
+# Prerequisites
+
+Ensure the following software is installed on your system.
+
+| Software | Version |
+|----------|----------|
+| Python | 3.11+ |
+| Git | Latest |
+| Docker Desktop | Latest |
+| Docker Compose | Latest |
+| pip | Latest |
+
+Verify installation:
+
+```bash
+python --version
+git --version
+docker --version
+docker compose version
+```
+
+# Clone the Repository
 
 ```bash
 git clone https://github.com/Charan89k/Model-Regression-Detection-System2.git
 
 cd Model-Regression-Detection-System2
 ```
+---
 
-Create a virtual environment
-
-```bash
-python -m venv .venv
-```
-
-Activate
+# Create a Virtual Environment
 
 Windows
 
-```bash
+```powershell
+python -m venv .venv
+
 .venv\Scripts\activate
 ```
 
-Linux/macOS
+Linux / macOS
 
 ```bash
+python3 -m venv .venv
+
 source .venv/bin/activate
 ```
+---
 
-Install dependencies
+# Install Dependencies
 
 ```bash
+pip install --upgrade pip
+
+pip install -e .
+
 pip install -e ".[dev]"
 ```
 
-Create environment variables
+This installs
+
+- FastAPI
+- SQLAlchemy
+- Typer
+- Ruff
+- Mypy
+- Pytest
+- OpenAI SDK
+- Anthropic SDK
+- Google Gemini SDK
+- Docker support
+
+---
+
+# Environment Variables
+
+Copy the example file.
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in
+Windows
 
-```
-OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
-GEMINI_API_KEY=
-SLACK_WEBHOOK_URL=
+```powershell
+copy .env.example .env
 ```
 
 ---
 
-# ▶ Running an Evaluation
+Edit `.env`
 
-```bash
-mrds run support_routing 1.0 router 1.0
+```env
+##########################################
+# Database
+##########################################
+
+DATABASE_URL=sqlite+aiosqlite:///./mrds.db
+
+##########################################
+# OpenAI
+##########################################
+
+OPENAI_API_KEY=your_openai_api_key
+
+##########################################
+# Anthropic
+##########################################
+
+ANTHROPIC_API_KEY=your_anthropic_api_key
+
+##########################################
+# Google Gemini
+##########################################
+
+GEMINI_API_KEY=your_gemini_api_key
+
+##########################################
+# Slack (Optional)
+##########################################
+
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+
+##########################################
+# Logging
+##########################################
+
+LOG_LEVEL=INFO
 ```
+---
 
-This will:
+# API Keys
 
-- Load prompt
-- Load dataset
-- Execute LLM
-- Score outputs
-- Detect regressions
-- Save run
-- Generate HTML report
-- Send Slack notification
+MRDS supports multiple LLM providers.
+
+## OpenAI
+
+Create an API key:
+
+https://platform.openai.com/api-keys
 
 ---
 
-# 🌐 Running the API
+## Anthropic Claude
+
+Create an API key:
+
+https://console.anthropic.com/
+
+---
+
+## Google Gemini
+
+Create an API key:
+
+https://aistudio.google.com/app/apikey
+
+---
+
+## Slack (Optional)
+
+Incoming Webhooks
+
+https://api.slack.com/messaging/webhooks
+
+Slack is only required if you want automatic regression alerts.
+
+---
+
+# Running the API
 
 ```bash
 uvicorn src.main:app --reload
 ```
 
-Open
+API
+
+```
+http://localhost:8000
+```
+
+Swagger Docs
 
 ```
 http://localhost:8000/docs
 ```
 
-Swagger UI is automatically generated.
+OpenAPI
+
+```
+http://localhost:8000/openapi.json
+```
+
+Health Check
+
+```
+http://localhost:8000/health
+```
 
 ---
 
-# 🧪 Running Tests
+# Running the CLI
+
+Show help
+
+```bash
+python -m mrds.presentation.cli.main --help
+```
+
+or
+
+```bash
+mrds --help
+```
+
+Run an evaluation
+
+```bash
+mrds run support_routing 1.0 router 1.0
+```
+
+---
+
+# Running Tests
+
+Run all tests
 
 ```bash
 python -m pytest
@@ -318,15 +461,37 @@ python -m pytest
 
 ---
 
-# 🔍 Static Analysis
+# Linting
 
 ```bash
 python -m ruff check .
 ```
 
+Automatically fix issues
+
+```bash
+python -m ruff check . --fix
+```
+
+---
+
+# Formatting
+
+Check formatting
+
 ```bash
 python -m ruff format --check .
 ```
+
+Format the project
+
+```bash
+python -m ruff format .
+```
+
+---
+
+# Static Type Checking
 
 ```bash
 python -m mypy --strict src
@@ -334,9 +499,9 @@ python -m mypy --strict src
 
 ---
 
-# 🐳 Docker
+# Docker
 
-Build
+Build the image
 
 ```bash
 docker build -t mrds .
@@ -345,10 +510,191 @@ docker build -t mrds .
 Run
 
 ```bash
-docker compose up
+docker run -p 8000:8000 \
+-e OPENAI_API_KEY=YOUR_KEY \
+-e ANTHROPIC_API_KEY=YOUR_KEY \
+-e GEMINI_API_KEY=YOUR_KEY \
+mrds
+```
+
+Swagger
+
+```
+http://localhost:8000/docs
 ```
 
 ---
+
+# Docker Compose
+
+Start
+
+```bash
+docker compose up --build
+```
+
+Detached
+
+```bash
+docker compose up -d
+```
+
+Stop
+
+```bash
+docker compose down
+```
+
+---
+
+# Project Structure
+
+```
+.
+├── datasets/
+├── prompts/
+├── reports/
+├── scripts/
+├── src/
+│   └── mrds/
+│       ├── adapters/
+│       ├── core/
+│       ├── domain/
+│       ├── infrastructure/
+│       ├── presentation/
+│       └── use_cases/
+├── tests/
+├── Dockerfile
+├── docker-compose.yml
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+# Supported Providers
+
+✅ OpenAI GPT Models
+
+✅ Anthropic Claude Models
+
+✅ Google Gemini Models
+
+---
+
+# CI/CD
+
+GitHub Actions automatically performs
+
+- Ruff Lint
+- Ruff Format
+- Mypy
+- Unit Tests
+- Docker Build Verification
+
+on every push and pull request.
+
+---
+
+# Common Commands
+
+Run API
+
+```bash
+uvicorn src.main:app --reload
+```
+
+Run Tests
+
+```bash
+python -m pytest
+```
+
+Lint
+
+```bash
+python -m ruff check .
+```
+
+Type Check
+
+```bash
+python -m mypy --strict src
+```
+
+Docker
+
+```bash
+docker build -t mrds .
+docker run -p 8000:8000 mrds
+```
+
+---
+
+# Troubleshooting
+
+## API won't start
+
+Ensure all required environment variables are configured.
+
+Check
+
+```bash
+python -m pytest
+```
+
+---
+
+## Docker fails
+
+Verify Docker Desktop is running.
+
+```bash
+docker info
+```
+
+---
+
+## CLI not found
+
+Run
+
+```bash
+pip install -e .
+```
+
+or
+
+```bash
+python -m mrds.presentation.cli.main --help
+```
+
+---
+
+## Missing API Key
+
+Without provider API keys:
+
+- API starts successfully ✅
+- Swagger works ✅
+- Health endpoint works ✅
+- Evaluation requests will fail until a valid provider key is configured.
+
+---
+
+# Production Deployment
+
+MRDS can be deployed on
+
+- Render
+- Railway
+- Koyeb
+- Fly.io
+- Azure Container Apps
+- Google Cloud Run
+- Oracle Cloud Free Tier
+
+using the provided Dockerfile.
 
 # 📈 Example Workflow
 
@@ -419,52 +765,6 @@ This project follows:
 - Dependency Injection
 - Async-first Design
 
----
-
-# 📷 Screenshots
-
-Replace these placeholders with actual screenshots.
-
-## Dashboard
-
-```
-docs/images/dashboard.png
-```
-
-## HTML Report
-
-```
-docs/images/report.png
-```
-
-## Swagger
-
-```
-docs/images/swagger.png
-```
-
-## CLI
-
-```
-docs/images/cli.png
-```
-
-## Slack Alert
-
-```
-docs/images/slack.png
-```
-
----
-
-# 🎥 Demo
-
-Coming Soon
-
-- Loom Walkthrough
-- YouTube Demo
-
----
 
 # 📌 Roadmap
 
@@ -491,12 +791,6 @@ Please:
 
 ---
 
-# 📄 License
-
-MIT License
-
----
-
 # 👨‍💻 Author
 
 **N. Sri Charan**
@@ -504,8 +798,4 @@ MIT License
 Aspiring AI Infrastructure & Machine Learning Engineer
 
 - GitHub: https://github.com/Charan89k
-- LinkedIn: *(Add your LinkedIn URL here)*
-
----
-
-> *"Treating LLM behavior as testable software is essential for building reliable AI systems."*
+- LinkedIn: https://www.linkedin.com/in/charan89k
