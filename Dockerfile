@@ -1,5 +1,5 @@
 # -- Builder Stage --
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -14,12 +14,16 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY pyproject.toml README.md ./
+COPY src/ ./src/
 # We install dependencies via pip. The 'mrds' package is installed in standard mode (not editable)
 RUN pip install --no-cache-dir --upgrade pip setuptools && \
     pip install --no-cache-dir .
 
+# Verify the package is installed correctly
+RUN python -c "import mrds; print(mrds.__file__)"
+
 # -- Runner Stage --
-FROM python:3.11-slim as runner
+FROM python:3.11-slim AS runner
 
 # Production optimizations
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -55,4 +59,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Default command to start the FastAPI server
-CMD uvicorn mrds.presentation.api.main:app --host 0.0.0.0 --port $PORT
+CMD ["uvicorn", "mrds.presentation.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
